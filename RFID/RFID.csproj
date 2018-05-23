@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Firmware\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
