@@ -36,9 +36,9 @@ namespace RFID.Controllers
 
         // POST /rfid
         [HttpPost]
-        public async Task Create([FromBody]Event value)
+        public async Task Create([FromBody]Event[] values)
         {
-            await context.Events.AddAsync(value);
+            await context.Events.AddRangeAsync(values);
             await context.SaveChangesAsync();
         }
     }
