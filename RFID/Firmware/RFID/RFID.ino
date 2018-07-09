@@ -21,11 +21,11 @@ typedef unsigned long long id_t;
 #define PORT 82
 
 #define ACCESS_FILE "/cards.txt"
+#define SEP ','
 #define RELAY_PIN LED_BUILTIN
 #define ADMIN_PIN D7
 #define RELAY_DELAY 5000
-#define ADDED_PREFIX "+"
-#define MSG_OPEN "open"
+#define ADDED_SUFIX "+"
 
 #define ERROR_SPIFFS_FAILED "spiffs failed"
 #define ERROR_FILE_OPEN "open failed"
@@ -52,11 +52,13 @@ void setup() {
   lcd = new LiquidCrystal_I2C(LCD_I2C, COLS, ROWS);
   lcd->begin(SDA, SCL);
   lcd->backlight();
+  lcd->print("load");
   stage();
   
   WiFiManager wifiManager;
   wifiManager.setDebugOutput(false);
   wifiManager.autoConnect(SSID, PASS);
+  WiFi.setAutoReconnect(true);
   stage();
   
   pinMode(ADMIN_PIN, INPUT);
@@ -72,6 +74,9 @@ void setup() {
   stage();
 
   if (SPIFFS.begin()) {
+    if (digitalRead(ADMIN_PIN)) {
+      SPIFFS.format();
+    }
     stage();
   } else {
     log(ERROR_SPIFFS_FAILED);
@@ -80,13 +85,13 @@ void setup() {
 
 void loop() {
   lcd->clear();
+  
   id_t id = rfid->read();
+  rfid->print_int64(id, (Stream*)lcd);
 
   if (digitalRead(ADMIN_PIN) && !has_access(id) && grant_access(id)) {
-    lcd->print(ADDED_PREFIX);
+    lcd->print(ADDED_SUFIX);
   }
-  
-  rfid->print_int64(id, (Stream*)lcd);
 
   if (has_access(id)) {
     trigger_relay();
@@ -116,8 +121,8 @@ void log(String message) {
 }
 
 void stage() {
-  static int i = 0;
-  log("stage " + String(++i));
+  lcd->print(".");
+  delay(LOG_DELAY);
 }
 
 bool grant_access(id_t id) {
@@ -126,20 +131,21 @@ bool grant_access(id_t id) {
     log(ERROR_FILE_OPEN);
     return false;
   }
-  file.println(string_int64(id));
+  file.print(string_int64(id));
+  file.print(SEP);
   file.close();
   return true;
 }
 
 bool has_access(id_t id) {
-  File file = SPIFFS.open(ACCESS_FILE, "r");
+  File file = SPIFFS.open(ACCESS_FILE, "a+");
   if (!file) {
     log(ERROR_FILE_OPEN);
     return false;
   }
   String asked_id = string_int64(id);
   while (file.available()) {
-    String current_id = file.readStringUntil('\r');
+    String current_id = file.readStringUntil(SEP);
     if (asked_id == current_id) {
       file.close();
       return true;
