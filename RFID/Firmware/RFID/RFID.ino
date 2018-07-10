@@ -166,6 +166,7 @@ void cache(id_t id, int state) {
   if (object.success()) {
     object["rfid"] = string_int64(id);
     object["state"] = state;
+    object["offset"] = millis();
   } else {
     log(ERROR_CACHE_FULL);
     clear_cache();
