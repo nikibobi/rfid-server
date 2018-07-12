@@ -22,7 +22,7 @@ typedef unsigned long long id_t;
 
 #define ACCESS_FILE "/cards.txt"
 #define SEP ','
-#define RELAY_PIN LED_BUILTIN
+#define RELAY_PIN D8
 #define ADMIN_PIN D7
 #define RELAY_DELAY 5000
 #define ADDED_SUFIX "+"
